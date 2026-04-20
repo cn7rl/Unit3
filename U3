@@ -1,0 +1,2337 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EMS Elite 200 - Interactive Quiz Bank</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f4f4f9;
+      }
+      .option-btn {
+        transition: all 0.2s ease-in-out;
+      }
+      .option-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-color: #3b82f6;
+      }
+      .correct {
+        background-color: #d1fae5 !important;
+        border-color: #10b981 !important;
+        color: #065f46 !important;
+      }
+      .wrong {
+        background-color: #fee2e2 !important;
+        border-color: #ef4444 !important;
+        color: #991b1b !important;
+      }
+      .disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+    </style>
+  </head>
+  <body class="text-gray-800 p-4 md:p-8">
+    <!-- Header -->
+    <header class="max-w-4xl mx-auto mb-8 text-center">
+      <h1
+        class="text-3xl md:text-4xl font-extrabold text-slate-800 border-b-4 border-red-500 inline-block pb-2"
+      >
+        EMS Elite 200
+      </h1>
+      <p class="text-slate-500 mt-2 font-medium">
+        Full Clinical Competency Question Set
+      </p>
+    </header>
+
+    <!-- Start Screen -->
+    <div
+      id="start-screen"
+      class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 text-center"
+    >
+      <h2 class="text-2xl font-bold text-slate-700 mb-4">
+        Welcome to the Exam Simulator
+      </h2>
+      <p class="text-gray-600 mb-8">
+        This application contains the complete 200-question master bank. Click
+        the button below to generate a randomized
+        <strong>50-question quiz</strong> for this session.
+      </p>
+      <button
+        onclick="startQuiz()"
+        class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-md transition transform hover:scale-105"
+      >
+        Start 50-Question Quiz
+      </button>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div
+      id="quiz-screen"
+      class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6 md:p-10 hidden"
+    >
+      <div class="flex justify-between items-center mb-6 border-b pb-4">
+        <span
+          id="progress-text"
+          class="text-sm font-bold text-slate-500 uppercase tracking-wider"
+          >Question 1 of 50</span
+        >
+        <span
+          id="score-text"
+          class="text-sm font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full"
+          >Score: 0</span
+        >
+      </div>
+
+      <h2
+        id="question-text"
+        class="text-xl md:text-2xl font-bold text-slate-800 mb-8 leading-snug"
+      ></h2>
+
+      <div id="options-container" class="grid grid-cols-1 gap-4">
+        <!-- Options injected here -->
+      </div>
+
+      <div
+        id="feedback-container"
+        class="hidden mt-8 p-5 rounded-lg border-l-4"
+      >
+        <h3 id="feedback-title" class="font-bold text-lg mb-2"></h3>
+        <p id="feedback-rationale" class="text-gray-700"></p>
+      </div>
+
+      <div class="mt-8 text-right">
+        <button
+          id="next-btn"
+          onclick="nextQuestion()"
+          class="hidden bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-8 rounded shadow transition"
+        >
+          Next Question &rarr;
+        </button>
+      </div>
+    </div>
+
+    <!-- End Screen -->
+    <div
+      id="end-screen"
+      class="max-w-2xl mx-auto bg-white rounded-xl shadow-lg p-8 text-center hidden"
+    >
+      <h2 class="text-3xl font-bold text-slate-800 mb-4">Exam Complete!</h2>
+      <p class="text-xl text-gray-600 mb-6">Your Final Score:</p>
+      <div
+        id="final-score"
+        class="text-5xl font-extrabold text-blue-600 mb-8"
+      ></div>
+      <button
+        onclick="location.reload()"
+        class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full text-lg shadow-md transition"
+      >
+        Generate New 50-Question Quiz
+      </button>
+    </div>
+
+    <script>
+      // FULL 200 QUESTION BANK
+      const questionBank = [
+        // MODULE 1: Scene Size-Up (1-40)
+        {
+          q: "According to the Law of Inertia, what is the 'second collision' in a motor vehicle crash?",
+          o: [
+            "The vehicle hitting an object",
+            "The body hitting the interior of the vehicle",
+            "The organs hitting the body wall",
+            "The secondary vehicle impact",
+          ],
+          a: 1,
+          r: "1st is the vehicle; 2nd is the body striking the dash/wheel; 3rd is internal organs striking the body wall.",
+        },
+        {
+          q: "Doubling the mass of a moving object has what effect on its kinetic energy?",
+          o: ["Stays the same", "Doubles", "Quadruples", "Halves"],
+          a: 1,
+          r: "KE = 1/2mv². Mass is not squared, so doubling it doubles the energy.",
+        },
+        {
+          q: "Doubling the velocity of a moving object has what effect on its kinetic energy?",
+          o: ["Stays the same", "Doubles", "Quadruples", "Halves"],
+          a: 2,
+          r: "Velocity is squared in the KE formula. 2 squared is 4.",
+        },
+        {
+          q: "Which injury is most characteristic of the 'down-and-under' pathway in a frontal collision?",
+          o: [
+            "Head impact with windshield",
+            "Cervical spine hyperextension",
+            "Posterior hip dislocation / femur fracture",
+            "Thoracic spine compression",
+          ],
+          a: 2,
+          r: "The knees hit the dashboard, forcing the femur into the pelvis.",
+        },
+        {
+          q: "Which injury is most characteristic of the 'up-and-over' pathway?",
+          o: [
+            "Head and cervical spine trauma",
+            "Knee lacerations",
+            "Ankle fractures",
+            "Pelvic fractures",
+          ],
+          a: 0,
+          r: "The upper body is thrown forward into the steering wheel or windshield.",
+        },
+        {
+          q: "In a rear-impact collision, what is the initial movement of the unrestrained occupant's head?",
+          o: [
+            "Forward flexion",
+            "Backward hyperextension (Whiplash)",
+            "Lateral rotation",
+            "Downward compression",
+          ],
+          a: 1,
+          r: "The car is pushed forward, taking the torso with it, while the head initially stays in place (snapping back).",
+        },
+        {
+          q: "A 'rotational' motor vehicle collision is most likely to produce:",
+          o: [
+            "Only frontal injuries",
+            "Isolated leg injuries",
+            "No injuries",
+            "A combination of multi-system trauma",
+          ],
+          a: 3,
+          r: "Spinning causes impact at multiple unpredictable angles.",
+        },
+        {
+          q: "What is the primary danger for an unrestrained occupant in a rollover collision?",
+          o: ["Burns", "Drowning", "Ejection", "Whiplash"],
+          a: 2,
+          r: "Ejection exponentially increases the risk of fatal injuries.",
+        },
+        {
+          q: "For an adult, a fall is considered a 'significant' mechanism of injury at what height?",
+          o: ["5 feet", "10 feet", "15 feet", "20 feet"],
+          a: 3,
+          r: "20 feet (about two stories) is the standard trauma triage criteria for adults.",
+        },
+        {
+          q: "For a child, a fall is considered significant if it is greater than:",
+          o: [
+            "3 feet",
+            "10 feet or 2-3 times their height",
+            "15 feet",
+            "20 feet",
+          ],
+          a: 1,
+          r: "Children have a higher center of gravity and different bone structure.",
+        },
+        {
+          q: "What is the primary cause of damage in the 'Primary Phase' of a blast injury?",
+          o: [
+            "The pressure wave impacting hollow organs",
+            "Shrapnel wounds",
+            "Being thrown into a wall",
+            "Toxic smoke inhalation",
+          ],
+          a: 0,
+          r: "The blast overpressure compresses and ruptures air-filled spaces like lungs and eardrums.",
+        },
+        {
+          q: "The 'Secondary Phase' of a blast injury is caused by:",
+          o: [
+            "The pressure wave",
+            "Flying debris and shrapnel",
+            "Impact with the ground",
+            "Thermal burns",
+          ],
+          a: 1,
+          r: "Debris mobilized by the blast acts as projectiles.",
+        },
+        {
+          q: "The 'Tertiary Phase' of a blast injury is caused by:",
+          o: [
+            "Heat",
+            "Shrapnel",
+            "The body being thrown against a hard surface",
+            "Radiation",
+          ],
+          a: 2,
+          r: "Tertiary means the patient becomes the projectile.",
+        },
+        {
+          q: "'Quaternary' blast injuries include:",
+          o: [
+            "Pressure wave damage",
+            "Shrapnel",
+            "Being thrown",
+            "Burns, crush injuries, and toxic inhalation",
+          ],
+          a: 3,
+          r: "Encompasses all collateral damage not caused by the first three phases.",
+        },
+        {
+          q: "A 'starburst' pattern on a windshield indicates:",
+          o: [
+            "A head impact",
+            "Defective glass",
+            "Side airbag deployment",
+            "External debris",
+          ],
+          a: 0,
+          r: "Indicates the occupant's head struck the glass, requiring careful C-spine clearance.",
+        },
+        {
+          q: "A bent steering wheel should immediately raise your index of suspicion for:",
+          o: [
+            "Ankle fractures",
+            "Chest trauma (cardiac contusion/rib fractures)",
+            "Pelvic fractures",
+            "Arm fractures",
+          ],
+          a: 1,
+          r: "The force required to bend a steering wheel transfers directly to the thorax.",
+        },
+        {
+          q: "A high-velocity projectile is characterized by speeds:",
+          o: [
+            "< 1,000 fps",
+            "1,000 - 1,500 fps",
+            "The speed of sound",
+            "> 2,000 fps (e.g., hunting rifles)",
+          ],
+          a: 3,
+          r: "High-velocity rounds create massive cavitation waves.",
+        },
+        {
+          q: "Cavitation in a penetrating trauma is caused by:",
+          o: [
+            "The spinning of the bullet",
+            "Pressure waves displacing tissue outward",
+            "The bullet fragmenting",
+            "Heat",
+          ],
+          a: 1,
+          r: "The energy creates a temporary cavity much larger than the bullet itself.",
+        },
+        {
+          q: "A knife wound is an example of:",
+          o: [
+            "Low-velocity trauma",
+            "Medium-velocity trauma",
+            "High-velocity trauma",
+            "Blunt trauma",
+          ],
+          a: 0,
+          r: "The damage is restricted directly to the blade's physical path.",
+        },
+        {
+          q: "If there are no apparent hazards at a vehicle crash, the danger zone should extend at least:",
+          o: ["25 feet", "50 feet in all directions", "100 feet", "500 feet"],
+          a: 1,
+          r: "Provides a buffer for working EMS personnel and equipment.",
+        },
+        {
+          q: "If a vehicle is on fire, the danger zone extends to at least:",
+          o: ["50 feet", "75 feet", "100 feet in all directions", "1 mile"],
+          a: 2,
+          r: "Accounts for potential explosion and heat radiation.",
+        },
+        {
+          q: "When downed power lines are present, the danger zone should be:",
+          o: [
+            "10 feet",
+            "50 feet",
+            "One full span between utility poles",
+            "A 100-foot radius",
+          ],
+          a: 2,
+          r: "Ensures safety if the line snaps or whips.",
+        },
+        {
+          q: "When approaching a HAZMAT scene, park the ambulance:",
+          o: [
+            "Uphill and upwind",
+            "Downhill and downwind",
+            "In the warm zone",
+            "Next to the command post",
+          ],
+          a: 0,
+          r: "Keeps the crew safe from flowing liquids and blowing gases.",
+        },
+        {
+          q: "In the ERG, the Yellow-bordered pages are used to look up a substance by:",
+          o: [
+            "Material name",
+            "Four-digit UN ID Number",
+            "Action guides",
+            "Isolation distances",
+          ],
+          a: 1,
+          r: "Yellow is indexed numerically by ID number.",
+        },
+        {
+          q: "In the ERG, the Blue-bordered pages are used to look up a substance by:",
+          o: [
+            "UN Number",
+            "Isolation distance",
+            "Material Name (Alphabetical)",
+            "Safety precautions",
+          ],
+          a: 2,
+          r: "Blue is indexed alphabetically by chemical name.",
+        },
+        {
+          q: "In the ERG, the Orange-bordered pages provide:",
+          o: [
+            "UN Numbers",
+            "Material Names",
+            "Toxicity levels",
+            "Emergency Action Guides (Hazards/Public Safety)",
+          ],
+          a: 3,
+          r: "Orange tells you what to actually DO on scene.",
+        },
+        {
+          q: "In the ERG, the Green-bordered pages provide:",
+          o: [
+            "Initial Isolation and Protective Action Distances",
+            "First aid",
+            "Firefighting foam types",
+            "Chemical formulas",
+          ],
+          a: 0,
+          r: "Green tells you how far to evacuate people.",
+        },
+        {
+          q: "What is the absolute first priority of EMS upon arriving at any scene?",
+          o: [
+            "Patient care",
+            "Personal and crew safety",
+            "Preserving evidence",
+            "Calling the hospital",
+          ],
+          a: 1,
+          r: "You cannot help if you become a patient yourself.",
+        },
+        {
+          q: "Which of the following is an example of 'Nature of Illness' (NOI)?",
+          o: [
+            "Gunshot wound",
+            "Fallen from roof",
+            "Patient complaining of chest pain",
+            "Dog bite",
+          ],
+          a: 2,
+          r: "NOI refers to medical conditions, not physical traumatic forces.",
+        },
+        {
+          q: "'Index of Suspicion' is best defined as:",
+          o: [
+            "A gut feeling about a crime",
+            "Anticipating unseen injuries based on the MOI",
+            "Assuming a patient is intoxicated",
+            "Suspecting child abuse",
+          ],
+          a: 1,
+          r: "Using scene physics to predict internal damage.",
+        },
+        {
+          q: "Standard Precautions (BSI) dictate that for a patient with arterial bleeding, you should wear:",
+          o: [
+            "Gloves only",
+            "Gloves, gown, mask, and eye protection",
+            "An N95 mask",
+            "No PPE is required",
+          ],
+          a: 1,
+          r: "Arterial blood spurts and can easily splash the face or uniform.",
+        },
+        {
+          q: "Multiple patients exhibiting the same symptoms (e.g., headache, nausea) at a residence suggests:",
+          o: [
+            "Food poisoning",
+            "A coincidence",
+            "Mass hysteria",
+            "An environmental hazard like Carbon Monoxide",
+          ],
+          a: 3,
+          r: "Always suspect CO or a chemical leak when multiple people fall ill simultaneously.",
+        },
+        {
+          q: "The first arriving unit at a mass casualty incident should immediately:",
+          o: [
+            "Start treating the worst patient",
+            "Establish Incident Command and begin triage",
+            "Load two patients into the ambulance",
+            "Wait for backup",
+          ],
+          a: 1,
+          r: "Command must be established to coordinate the incoming resources.",
+        },
+        {
+          q: "Which is a strong indicator of potential violence on scene?",
+          o: [
+            "Loud shouting and broken glass",
+            "A crying child",
+            "A dark room",
+            "An elderly patient",
+          ],
+          a: 0,
+          r: "Verbal aggression and property damage often precede physical violence.",
+        },
+        {
+          q: "A gunshot wound's exit wound is typically:",
+          o: [
+            "Smaller than the entry",
+            "Larger and more jagged than the entry",
+            "Perfectly round",
+            "Non-existent",
+          ],
+          a: 1,
+          r: "The bullet expands/tumbles and carries tissue out with it.",
+        },
+        {
+          q: "In penetrating trauma, you must try to determine the pathway to:",
+          o: [
+            "Predict which underlying organs may be damaged",
+            "Tell the police",
+            "Decide which bandage to use",
+            "Determine the caliber of the weapon",
+          ],
+          a: 0,
+          r: "The path dictates the potential life-threats (e.g., heart vs. bowel).",
+        },
+        {
+          q: "A properly worn seatbelt should lie:",
+          o: [
+            "Across the neck and stomach",
+            "Across the pelvis and chest",
+            "Under the arms",
+            "Loosely across the chest",
+          ],
+          a: 1,
+          r: "It distributes force across the strongest bones (pelvis/sternum).",
+        },
+        {
+          q: "What is a significant hazard to EMS during vehicle extrication?",
+          o: [
+            "Radio interference",
+            "Undeployed airbags",
+            "Seatbelt webbing",
+            "The vehicle's radio",
+          ],
+          a: 1,
+          r: "Airbags can deploy suddenly during rescue, causing severe injury to EMS.",
+        },
+        {
+          q: "A motorcycle 'lay-down' maneuver is:",
+          o: [
+            "When the bike falls on the rider",
+            "An intentional drop by the rider to avoid a worse head-on impact",
+            "Popping a wheelie",
+            "Parking the bike",
+          ],
+          a: 1,
+          r: "Creates severe abrasions but prevents catastrophic kinetic transfer.",
+        },
+        {
+          q: "If a child is in a car seat during a moderate collision, EMS should:",
+          o: [
+            "Remove the child and leave the seat",
+            "Keep the child in the seat to immobilize, and transport both",
+            "Throw the seat away",
+            "Only transport the child if they are crying",
+          ],
+          a: 1,
+          r: "The seat acts as an immobilization device and should be evaluated post-crash.",
+        },
+
+        // MODULE 2: Primary Assessment (41-80)
+        {
+          q: "What is the first step of the Primary Assessment?",
+          o: [
+            "Checking the pulse",
+            "Forming a General Impression",
+            "Taking a blood pressure",
+            "Applying oxygen",
+          ],
+          a: 1,
+          r: "Your initial 'look' as you approach determines 'sick vs. not sick'.",
+        },
+        {
+          q: "On the AVPU scale, a patient who opens their eyes when you rub their sternum is:",
+          o: ["Alert", "Verbal", "Painful (P)", "Unresponsive"],
+          a: 2,
+          r: "They responded to a painful physical stimulus, not a verbal one.",
+        },
+        {
+          q: "Stridor is a high-pitched inspiratory sound indicating:",
+          o: [
+            "Fluid in the lungs",
+            "Upper airway obstruction or swelling",
+            "Lower airway constriction",
+            "Normal breathing",
+          ],
+          a: 1,
+          r: "Often caused by croup, epiglottitis, or a foreign body in the larynx.",
+        },
+        {
+          q: "Wheezing is a whistling sound indicating:",
+          o: [
+            "Lower airway bronchoconstriction (e.g., asthma)",
+            "Tongue obstruction",
+            "Heart failure",
+            "A clear airway",
+          ],
+          a: 0,
+          r: "Air forced through narrowed bronchioles creates the whistle.",
+        },
+        {
+          q: "A 'flail chest' is clinically identified by:",
+          o: [
+            "Bruising on the sternum",
+            "Shallow breathing",
+            "Sucking sounds",
+            "Paradoxical movement of a chest wall segment",
+          ],
+          a: 3,
+          r: "The broken segment moves inward during inhalation and outward during exhalation.",
+        },
+        {
+          q: "A 'sucking chest wound' must be immediately treated with:",
+          o: [
+            "A tourniquet",
+            "An occlusive dressing (taped on 3 sides)",
+            "Dry sterile gauze",
+            "A splint",
+          ],
+          a: 1,
+          r: "Prevents air from entering the chest cavity and causing a tension pneumothorax.",
+        },
+        {
+          q: "In the X-ABC sequence, what does 'X' stand for?",
+          o: [
+            "X-Ray",
+            "Exsanguinating hemorrhage",
+            "Extra help",
+            "Examination",
+          ],
+          a: 1,
+          r: "Massive external bleeding must be stopped before managing the airway.",
+        },
+        {
+          q: "Normal capillary refill time is:",
+          o: [
+            "Less than 2 seconds",
+            "3-4 seconds",
+            "5 seconds",
+            "Instantaneous only",
+          ],
+          a: 0,
+          r: "Indicates normal peripheral perfusion.",
+        },
+        {
+          q: "Capillary refill is considered a highly reliable assessment tool primarily in:",
+          o: [
+            "Elderly adults",
+            "Pediatric patients under 6 years old",
+            "Adult females",
+            "All trauma patients",
+          ],
+          a: 1,
+          r: "Adult cap refill is affected by too many external variables (smoking, cold, meds).",
+        },
+        {
+          q: "Skin that is 'pale, cool, and clammy' is a classic indicator of:",
+          o: ["A fever", "Heatstroke", "Hypoperfusion / Shock", "Hypertension"],
+          a: 2,
+          r: "The body vasoconstricts peripheral vessels to shunt blood to vital organs.",
+        },
+        {
+          q: "Cyanosis (blue/gray skin) is an indicator of:",
+          o: [
+            "Early stress",
+            "Liver failure",
+            "Late, severe hypoxia",
+            "Carbon monoxide poisoning",
+          ],
+          a: 2,
+          r: "Tissues are significantly depleted of oxygenated hemoglobin.",
+        },
+        {
+          q: "Jaundice (yellow skin/sclera) indicates a problem with the:",
+          o: ["Heart", "Lungs", "Kidneys", "Liver"],
+          a: 3,
+          r: "Buildup of bilirubin due to hepatic dysfunction.",
+        },
+        {
+          q: "When checking a pulse on an unresponsive infant, use the:",
+          o: [
+            "Carotid artery",
+            "Brachial artery",
+            "Radial artery",
+            "Femoral artery",
+          ],
+          a: 1,
+          r: "Infants have short, fat necks making the carotid difficult to locate.",
+        },
+        {
+          q: "When checking a pulse on an unresponsive adult, use the:",
+          o: [
+            "Radial artery",
+            "Brachial artery",
+            "Carotid artery",
+            "Dorsalis pedis artery",
+          ],
+          a: 2,
+          r: "It is a central pulse and the most reliable in hypotensive states.",
+        },
+        {
+          q: "When checking a pulse on a conscious adult, use the:",
+          o: [
+            "Carotid artery",
+            "Femoral artery",
+            "Apical pulse",
+            "Radial artery",
+          ],
+          a: 3,
+          r: "Standard, less invasive check for patients with a pulse.",
+        },
+        {
+          q: "Tachycardia in an adult is defined as a heart rate greater than:",
+          o: ["60 bpm", "80 bpm", "100 bpm", "120 bpm"],
+          a: 2,
+          r: "Normal is 60-100. Over 100 is tachycardia.",
+        },
+        {
+          q: "Bradycardia in an adult is defined as a heart rate less than:",
+          o: ["40 bpm", "50 bpm", "60 bpm", "70 bpm"],
+          a: 2,
+          r: "Under 60 bpm is bradycardia.",
+        },
+        {
+          q: "Which of the following makes a patient a 'High Priority' for transport?",
+          o: [
+            "A twisted ankle",
+            "A small laceration",
+            "Altered mental status",
+            "A minor cough",
+          ],
+          a: 2,
+          r: "Altered LOC indicates brain hypoxia or severe systemic issues.",
+        },
+        {
+          q: "The 'Golden Hour' (or Period) refers to the time from:",
+          o: [
+            "Arrival of EMS to hospital",
+            "Injury occurrence to definitive surgical care",
+            "Dispatch to arrival",
+            "Hospital admission to discharge",
+          ],
+          a: 1,
+          r: "Survival rates plummet if surgery is delayed beyond this window.",
+        },
+        {
+          q: "The 'Platinum 10' refers to:",
+          o: [
+            "10 minutes of CPR",
+            "10 liters of oxygen",
+            "Maximum goal of 10 minutes of scene time for critical trauma patients",
+            "A 10-point assessment scale",
+          ],
+          a: 2,
+          r: "Minimize on-scene time to maximize the Golden Hour.",
+        },
+        {
+          q: "The primary goal of the Primary Assessment is to:",
+          o: [
+            "Obtain a full medical history",
+            "Determine the insurance status",
+            "Identify and treat immediate life-threats",
+            "Apply bandages to all scrapes",
+          ],
+          a: 2,
+          r: "A-B-C interventions to keep the patient alive right now.",
+        },
+        {
+          q: "The 'Chief Complaint' is:",
+          o: [
+            "What the bystander says",
+            "The patient's description of their main problem in their own words",
+            "The EMS diagnosis",
+            "The dispatcher's notes",
+          ],
+          a: 1,
+          r: "The exact reason the patient requested help.",
+        },
+        {
+          q: "A patient sitting in the 'Tripod' position is likely experiencing:",
+          o: [
+            "Severe abdominal pain",
+            "A spinal injury",
+            "Significant respiratory distress",
+            "Nausea",
+          ],
+          a: 2,
+          r: "Leaning forward opens the chest and engages accessory muscles.",
+        },
+        {
+          q: "Levine's sign (a clenched fist held over the center of the chest) strongly suggests:",
+          o: [
+            "Asthma",
+            "Cardiac chest pain (ischemia/infarction)",
+            "Choking",
+            "Reflux",
+          ],
+          a: 1,
+          r: "A classic universal sign of crushing cardiac pain.",
+        },
+        {
+          q: "Nasal flaring in a pediatric patient is a sign of:",
+          o: [
+            "Allergies",
+            "Respiratory distress / increased work of breathing",
+            "Normal breathing",
+            "A head cold",
+          ],
+          a: 1,
+          r: "The body is trying to maximize airway diameter to pull in oxygen.",
+        },
+        {
+          q: "'See-saw' breathing (abdomen moves out as chest moves in) is a sign of:",
+          o: [
+            "Severe respiratory distress/fatigue, especially in pediatrics",
+            "Normal infant breathing",
+            "A full stomach",
+            "Sleep apnea",
+          ],
+          a: 0,
+          r: "Indicates extreme use of accessory muscles and impending failure.",
+        },
+        {
+          q: "'Staccato' speech (speaking only 1-2 words between breaths) indicates:",
+          o: ["Stuttering", "Anger", "Severe shortness of breath", "Confusion"],
+          a: 2,
+          r: "The patient lacks the tidal volume to complete a sentence.",
+        },
+        {
+          q: "How long should you take to check for a pulse on an unresponsive patient?",
+          o: ["2 seconds", "No more than 10 seconds", "30 seconds", "1 minute"],
+          a: 1,
+          r: "Do not delay CPR if a pulse cannot be found quickly.",
+        },
+        {
+          q: "An Oropharyngeal Airway (OPA) is indicated for:",
+          o: [
+            "An awake patient",
+            "A patient with an intact gag reflex",
+            "An unresponsive patient with NO gag reflex",
+            "A patient with nasal trauma",
+          ],
+          a: 2,
+          r: "Using it on a patient with a gag reflex will induce vomiting.",
+        },
+        {
+          q: "A Nasopharyngeal Airway (NPA) is indicated for:",
+          o: [
+            "Patients with severe facial trauma",
+            "Patients with an intact gag reflex who need airway support",
+            "Patients with a skull fracture",
+            "Infants only",
+          ],
+          a: 1,
+          r: "Better tolerated by semi-conscious patients than an OPA.",
+        },
+        {
+          q: "To open the airway of a trauma patient with a suspected C-spine injury, use the:",
+          o: [
+            "Head-tilt chin-lift",
+            "Blind finger sweep",
+            "Neck hyperextension",
+            "Jaw-thrust maneuver",
+          ],
+          a: 3,
+          r: "Moves the tongue without tilting the neck.",
+        },
+        {
+          q: "To open the airway of a medical patient with NO suspected trauma, use the:",
+          o: [
+            "Jaw-thrust",
+            "Head-tilt chin-lift",
+            "Heimlich maneuver",
+            "Recovery position",
+          ],
+          a: 1,
+          r: "The most effective manual airway maneuver if spine is clear.",
+        },
+        {
+          q: "'Gurgling' airway sounds require immediate:",
+          o: [
+            "Positive pressure ventilation",
+            "Suctioning",
+            "An OPA",
+            "Chest compressions",
+          ],
+          a: 1,
+          r: "Fluid must be removed before air is pushed into the lungs.",
+        },
+        {
+          q: "'Snoring' airway sounds require immediate:",
+          o: [
+            "Suctioning",
+            "Manual airway positioning (head-tilt or jaw-thrust)",
+            "Oxygen via cannula",
+            "CPR",
+          ],
+          a: 1,
+          r: "The sound of the tongue blocking the pharynx; fixed by positioning.",
+        },
+        {
+          q: "'Inadequate breathing' is characterized by:",
+          o: [
+            "A rate of 16 bpm",
+            "Good tidal volume",
+            "Too fast/slow rates with shallow depth or irregular rhythm",
+            "Symmetrical chest rise",
+          ],
+          a: 2,
+          r: "Not enough air is reaching the alveoli to sustain life.",
+        },
+        {
+          q: "A patient with inadequate breathing (e.g., rate of 6, shallow) requires:",
+          o: [
+            "A non-rebreather mask",
+            "Assisted ventilations with a Bag-Valve Mask (BVM)",
+            "A nasal cannula",
+            "Observation",
+          ],
+          a: 1,
+          r: "Oxygen alone won't work if the mechanical breathing process is failing.",
+        },
+        {
+          q: "A patient with adequate breathing but signs of hypoxia (e.g., pale, SpO2 90%) requires:",
+          o: [
+            "A BVM",
+            "Supplemental oxygen (e.g., Non-rebreather mask)",
+            "A tourniquet",
+            "CPR",
+          ],
+          a: 1,
+          r: "They are breathing fine mechanically, but need a higher concentration of oxygen.",
+        },
+        {
+          q: "If direct pressure fails to stop severe arterial bleeding on an arm, you should immediately:",
+          o: [
+            "Elevate the arm",
+            "Apply pressure to a pressure point",
+            "Apply a tourniquet",
+            "Apply ice",
+          ],
+          a: 2,
+          r: "Current protocols dictate moving rapidly to a tourniquet for uncontrolled extremity hemorrhage.",
+        },
+        {
+          q: "A previously calm patient suddenly becomes agitated and combative. You should suspect:",
+          o: [
+            "They dislike EMS",
+            "Developing hypoxia or head injury",
+            "Low blood pressure",
+            "A psychiatric emergency",
+          ],
+          a: 1,
+          r: "The brain reacts to oxygen deprivation with restlessness and combativeness.",
+        },
+        {
+          q: "The 'General Impression' is formed:",
+          o: [
+            "Before you touch the patient, as you approach",
+            "During the secondary assessment",
+            "While taking vitals",
+            "At the hospital",
+          ],
+          a: 0,
+          r: "Your initial 'from the doorway' evaluation.",
+        },
+
+        // MODULE 3: Vital Signs (81-120)
+        {
+          q: "Systolic blood pressure represents:",
+          o: [
+            "Heart at rest",
+            "Pressure during left ventricular contraction",
+            "Pressure in the veins",
+            "Average body pressure",
+          ],
+          a: 1,
+          r: "The peak pressure exerted against arterial walls.",
+        },
+        {
+          q: "Diastolic blood pressure represents:",
+          o: [
+            "Ventricular contraction",
+            "Pressure in the vena cava",
+            "Pressure while the left ventricle is at rest/refilling",
+            "Pulse rate",
+          ],
+          a: 2,
+          r: "The residual pressure in the system when the heart relaxes.",
+        },
+        {
+          q: "Pulse pressure is calculated by:",
+          o: [
+            "Adding systolic and diastolic",
+            "Multiplying them",
+            "Subtracting diastolic from systolic",
+            "Dividing systolic by diastolic",
+          ],
+          a: 2,
+          r: "Normal is around 30-40 mmHg.",
+        },
+        {
+          q: "A 'narrowing' pulse pressure (e.g., 100/80) is a classic sign of:",
+          o: [
+            "Cardiac tamponade or compensated shock",
+            "A head injury",
+            "Hypertension",
+            "Normal resting state",
+          ],
+          a: 0,
+          r: "The heart is struggling to pump, or vessels are clamping down tightly.",
+        },
+        {
+          q: "A 'widening' pulse pressure (e.g., 180/60) is often seen in:",
+          o: [
+            "Hypovolemic shock",
+            "Increased Intracranial Pressure (ICP) / Cushing's Triad",
+            "Asthma",
+            "Dehydration",
+          ],
+          a: 1,
+          r: "The body is trying to force blood into a swollen brain.",
+        },
+        {
+          q: "If a blood pressure cuff is too small for a patient's arm, the reading will be:",
+          o: [
+            "Falsely low",
+            "Perfectly accurate",
+            "Falsely high",
+            "Unreadable",
+          ],
+          a: 2,
+          r: "It requires excessive pressure to occlude the artery.",
+        },
+        {
+          q: "Obtaining a blood pressure by 'Palpation' allows you to determine:",
+          o: [
+            "Both systolic and diastolic",
+            "Only the diastolic",
+            "Only the pulse rate",
+            "Only the systolic pressure",
+          ],
+          a: 3,
+          r: "You can feel the return of the pulse, but cannot hear the diastolic drop-off.",
+        },
+        {
+          q: "'Auscultation' means:",
+          o: [
+            "Feeling for a pulse",
+            "Looking at the skin",
+            "Listening with a stethoscope",
+            "Tapping the chest",
+          ],
+          a: 2,
+          r: "Using ears/stethoscope to hear body sounds.",
+        },
+        {
+          q: "The normal respiratory rate for a resting adult is:",
+          o: ["8 - 10", "12 - 20", "20 - 30", "30 - 40"],
+          a: 1,
+          r: "Rates outside this range may indicate distress.",
+        },
+        {
+          q: "The normal respiratory rate for a child is:",
+          o: ["12 - 20", "15 - 30", "25 - 50", "40 - 60"],
+          a: 1,
+          r: "Children breathe faster than adults.",
+        },
+        {
+          q: "The normal respiratory rate for an infant is:",
+          o: ["12 - 20", "15 - 30", "25 - 50", "50 - 70"],
+          a: 2,
+          r: "Infants have the highest normal respiratory rates.",
+        },
+        {
+          q: "The acronym PERRL stands for:",
+          o: [
+            "Pulse, Eyes, Rate, Rhythm, Lungs",
+            "Pupils Equal, Round, Reactive to Light",
+            "Pain, Extremities, Range, Reflex, Level",
+            "Patient Evaluation Record",
+          ],
+          a: 1,
+          r: "Standard neurological assessment of the eyes.",
+        },
+        {
+          q: "Constricted (pinpoint) pupils are a strong indicator of:",
+          o: ["Head injury", "Opiate/Narcotic overdose", "Cocaine use", "Fear"],
+          a: 1,
+          r: "Opiates cause profound miosis (constriction).",
+        },
+        {
+          q: "Dilated (large) pupils are often caused by:",
+          o: [
+            "Opiates",
+            "Bright light",
+            "Stimulants (Amphetamines/Cocaine) or Adrenaline",
+            "Sleep",
+          ],
+          a: 2,
+          r: "Sympathetic nervous system activation causes mydriasis (dilation).",
+        },
+        {
+          q: "Unequal pupils (Anisocoria) in the setting of trauma suggest:",
+          o: [
+            "Eye infection",
+            "Normal finding",
+            "Blindness",
+            "Increased Intracranial Pressure (ICP) causing nerve compression",
+          ],
+          a: 3,
+          r: "Pressure on the 3rd cranial nerve (Oculomotor).",
+        },
+        {
+          q: "A normal Pulse Oximetry (SpO2) reading is:",
+          o: ["80-90%", "90-94%", "95-100%", "100-110%"],
+          a: 2,
+          r: "Healthy individuals saturate near 100% on room air.",
+        },
+        {
+          q: "Pulse Oximetry can give a 'false high' (reading 100% when the patient is dying) in the presence of:",
+          o: [
+            "Anemia",
+            "Carbon Monoxide (CO) poisoning",
+            "Hypothermia",
+            "Dark nail polish",
+          ],
+          a: 1,
+          r: "The machine reads CO attached to hemoglobin as if it were Oxygen.",
+        },
+        {
+          q: "Capnography (ETCO2) measures:",
+          o: [
+            "Oxygen in the blood",
+            "Carbon Monoxide levels",
+            "Carbon Dioxide in exhaled air",
+            "Blood pressure",
+          ],
+          a: 2,
+          r: "The gold standard for confirming ventilation effectiveness.",
+        },
+        {
+          q: "Normal ETCO2 range is:",
+          o: ["10-20 mmHg", "25-35 mmHg", "35-45 mmHg", "50-60 mmHg"],
+          a: 2,
+          r: "Indicates normal metabolic production and ventilation of CO2.",
+        },
+        {
+          q: "Hypoglycemia is generally defined as a blood glucose level below:",
+          o: ["40 mg/dL", "70 mg/dL", "100 mg/dL", "120 mg/dL"],
+          a: 1,
+          r: "Symptomatic hypoglycemia requires intervention below this level.",
+        },
+        {
+          q: "Hyperglycemia is generally defined as a blood glucose level above:",
+          o: [
+            "120 mg/dL",
+            "150 mg/dL",
+            "200 mg/dL (depending on protocols)",
+            "500 mg/dL",
+          ],
+          a: 2,
+          r: "Can lead to DKA or HHS if untreated.",
+        },
+        {
+          q: "Skin 'Turgor' is assessed to determine a patient's:",
+          o: [
+            "Temperature",
+            "Hydration status",
+            "Oxygen level",
+            "Blood pressure",
+          ],
+          a: 1,
+          r: "If skin 'tents' when pinched, the patient is severely dehydrated.",
+        },
+        {
+          q: "'Baseline Vitals' are:",
+          o: [
+            "The expected vitals for their age",
+            "The very first set of vitals taken by EMS",
+            "The vitals taken at the hospital",
+            "The lowest vitals recorded",
+          ],
+          a: 1,
+          r: "Used as the starting point to track patient trends.",
+        },
+        {
+          q: "For a 'stable' patient, vitals should be reassessed every:",
+          o: ["5 minutes", "10 minutes", "15 minutes", "30 minutes"],
+          a: 2,
+          r: "Standard minimum monitoring frequency.",
+        },
+        {
+          q: "For an 'unstable' patient, vitals should be reassessed every:",
+          o: ["2 minutes", "5 minutes", "10 minutes", "15 minutes"],
+          a: 1,
+          r: "Frequent monitoring catches rapid deterioration.",
+        },
+        {
+          q: "'Cheyne-Stokes' respirations (increasing then decreasing depth followed by a period of apnea) indicate:",
+          o: [
+            "Asthma",
+            "Diabetic ketoacidosis",
+            "Severe brain injury or end-of-life",
+            "Normal sleep",
+          ],
+          a: 2,
+          r: "Driven by brainstem damage or severe metabolic issues.",
+        },
+        {
+          q: "'Kussmaul' respirations (deep, rapid breathing) indicate:",
+          o: [
+            "A head cold",
+            "Opiate overdose",
+            "Choking",
+            "Diabetic Ketoacidosis (DKA) / Metabolic acidosis",
+          ],
+          a: 3,
+          r: "The body is trying to blow off excess acids (CO2).",
+        },
+        {
+          q: "'Orthostatic Vitals' (the tilt test) assess for:",
+          o: [
+            "Brain damage",
+            "Significant volume loss (dehydration/bleeding)",
+            "Asthma severity",
+            "Heart attack",
+          ],
+          a: 1,
+          r: "A drop in BP and spike in HR when standing indicates low fluid volume.",
+        },
+        {
+          q: "'Pulsus Paradoxus' is defined as:",
+          o: [
+            "A fast pulse",
+            "A slow pulse",
+            "A drop in systolic BP >10 mmHg during inhalation",
+            "An irregular rhythm",
+          ],
+          a: 2,
+          r: "Seen in Cardiac Tamponade, severe Asthma, and COPD.",
+        },
+        {
+          q: "A 'thready' pulse is:",
+          o: [
+            "Strong and bounding",
+            "Irregular",
+            "Weak, thin, and rapid",
+            "Slow",
+          ],
+          a: 2,
+          r: "A classic sign of hypovolemic shock.",
+        },
+        {
+          q: "A 'bounding' pulse is:",
+          o: ["Weak", "Slow", "Irregular", "Unusually strong and full"],
+          a: 3,
+          r: "Often seen in hypertensive crisis or heat emergencies.",
+        },
+        {
+          q: "'Rales' (Crackles) heard during auscultation indicate:",
+          o: [
+            "Fluid in the alveoli (e.g., Pulmonary Edema / CHF)",
+            "Mucus in the bronchi",
+            "A narrowed airway",
+            "A clear lung",
+          ],
+          a: 0,
+          r: "The sound of air popping through fluid-filled sacs.",
+        },
+        {
+          q: "'Rhonchi' heard during auscultation indicate:",
+          o: [
+            "Fluid in alveoli",
+            "Mucus/secretions in the larger airways (bronchi)",
+            "Asthma",
+            "A collapsed lung",
+          ],
+          a: 1,
+          r: "Often presents as a low-pitched rattling or snoring sound.",
+        },
+        {
+          q: "A 'Pulse Deficit' occurs when:",
+          o: [
+            "The heart rate is zero",
+            "The systolic and diastolic are the same",
+            "The apical pulse (heart) is faster than the radial pulse (wrist)",
+            "The pulse is too fast to count",
+          ],
+          a: 2,
+          r: "Indicates weak contractions are not reaching the extremities.",
+        },
+        {
+          q: "Hypotension in an adult is generally a systolic pressure below:",
+          o: ["120 mmHg", "100 mmHg", "90 mmHg", "80 mmHg"],
+          a: 2,
+          r: "A clinical marker for decompensation.",
+        },
+        {
+          q: "'Decompensated Shock' occurs when:",
+          o: [
+            "The heart rate increases",
+            "The skin gets pale",
+            "The blood pressure finally drops below normal",
+            "The patient gets thirsty",
+          ],
+          a: 2,
+          r: "The body's compensatory mechanisms have failed to maintain pressure.",
+        },
+        {
+          q: "'Compensated Shock' is characterized by:",
+          o: [
+            "Normal BP, but signs of poor perfusion (tachycardia, pale skin)",
+            "Low BP",
+            "Unconsciousness",
+            "Bradycardia",
+          ],
+          a: 0,
+          r: "The body is successfully fighting to keep the BP up.",
+        },
+        {
+          q: "Which is a late sign of hypoxia?",
+          o: ["Tachycardia", "Restlessness", "Cyanosis", "Tachypnea"],
+          a: 2,
+          r: "Tissues turn blue only after prolonged oxygen deprivation.",
+        },
+        {
+          q: "Normal human body temperature is:",
+          o: ["96.8 F", "97.5 F", "98.6 F (37 C)", "100.4 F"],
+          a: 2,
+          r: "The baseline core temperature.",
+        },
+        {
+          q: "'Apnea' means:",
+          o: [
+            "Fast breathing",
+            "Slow breathing",
+            "Painful breathing",
+            "Absence of breathing",
+          ],
+          a: 3,
+          r: "The patient is not breathing at all.",
+        },
+
+        // MODULE 4: Principles of Assessment (121-160)
+        {
+          q: "In the OPQRST mnemonic, 'O' stands for:",
+          o: [
+            "Observation",
+            "Onset (What were you doing when it started?)",
+            "Oxygen",
+            "Orientation",
+          ],
+          a: 1,
+          r: "Establishes the context of the symptom's beginning.",
+        },
+        {
+          q: "In SAMPLE history, the 'L' stands for:",
+          o: [
+            "Lungs",
+            "Last oral intake",
+            "Level of consciousness",
+            "Location of pain",
+          ],
+          a: 1,
+          r: "Critical information for surgeons regarding aspiration risk.",
+        },
+        {
+          q: "'Subjective' data in an EMS report is:",
+          o: [
+            "Measurable numbers (BP, HR)",
+            "Things the patient feels and tells you (Symptoms)",
+            "Your personal opinions",
+            "Hospital lab results",
+          ],
+          a: 1,
+          r: "Subjective = Symptoms (Pain, Nausea).",
+        },
+        {
+          q: "'Objective' data in an EMS report is:",
+          o: [
+            "The patient's feelings",
+            "Measurable, observable facts (Signs)",
+            "Bystander rumors",
+            "The Chief Complaint",
+          ],
+          a: 1,
+          r: "Objective = Signs (Deformity, BP of 120/80).",
+        },
+        {
+          q: "A 'Differential Diagnosis' is:",
+          o: [
+            "The final hospital diagnosis",
+            "When two medics disagree",
+            "A list of potential causes for the patient's symptoms",
+            "A specialized assessment tool",
+          ],
+          a: 2,
+          r: "You rule items in or out to arrive at a working field diagnosis.",
+        },
+        {
+          q: "A 'Focused Exam' is most appropriate for:",
+          o: [
+            "A multi-system trauma patient",
+            "An unconscious medical patient",
+            "A responsive medical patient with a specific, isolated complaint",
+            "A pediatric patient",
+          ],
+          a: 2,
+          r: "If they cut their finger, you don't need a full body sweep.",
+        },
+        {
+          q: "A 'Rapid Trauma Assessment' is indicated for:",
+          o: [
+            "All patients",
+            "Patients with an isolated, minor injury",
+            "Patients with a significant MOI or altered mental status",
+            "Medical patients only",
+          ],
+          a: 2,
+          r: "A fast (60-90 sec) head-to-toe to find hidden life threats.",
+        },
+        {
+          q: "The primary purpose of 'Reassessment' is to:",
+          o: [
+            "Fill out paperwork",
+            "Identify trends and changes in the patient's condition",
+            "Wake the patient up",
+            "Communicate with the hospital",
+          ],
+          a: 1,
+          r: "Checking if your interventions worked or if they are crashing.",
+        },
+        {
+          q: "In DCAP-BTLS, the 'D' stands for:",
+          o: ["Discoloration", "Deformities", "Distress", "Diastolic"],
+          a: 1,
+          r: "Looking for unnatural shapes in bones/tissue.",
+        },
+        {
+          q: "'Open-ended' questions are useful because:",
+          o: [
+            "They save time",
+            "They force a yes/no answer",
+            "They allow the patient to describe symptoms in their own words",
+            "They suggest the diagnosis to the patient",
+          ],
+          a: 2,
+          r: "e.g., 'Can you describe the pain?' instead of 'Does it hurt here?'",
+        },
+        {
+          q: "'Closed-ended' questions are best used for:",
+          o: [
+            "Gathering a long history",
+            "Patients in severe respiratory distress who cannot speak well",
+            "Psychiatric patients",
+            "Establishing a chief complaint",
+          ],
+          a: 1,
+          r: "Allows them to nod or say 'Yes/No' without wasting breath.",
+        },
+        {
+          q: "A 'Pertinent Negative' is:",
+          o: [
+            "A rude comment from a patient",
+            "An expected sign or symptom that is notably ABSENT",
+            "A low blood pressure reading",
+            "A failed IV attempt",
+          ],
+          a: 1,
+          r: "e.g., A patient with breathing difficulty who denies chest pain.",
+        },
+        {
+          q: "A 'Pertinent Positive' is:",
+          o: [
+            "A good attitude",
+            "A sign or symptom that confirms a suspected diagnosis",
+            "A normal vital sign",
+            "A successful intervention",
+          ],
+          a: 1,
+          r: "e.g., A patient with a femur fracture who has crepitus.",
+        },
+        {
+          q: "A 'Handoff Report' occurs:",
+          o: [
+            "Over the radio",
+            "When transferring care to equal or higher-level providers at the hospital",
+            "When dispatching a unit",
+            "During a shift change",
+          ],
+          a: 1,
+          r: "Ensures continuity of care.",
+        },
+        {
+          q: "For a patient to legally 'Refuse Care', they must be:",
+          o: [
+            "Over 21",
+            "Alert, oriented (A&Ox4), and fully informed of the risks of refusal",
+            "Accompanied by a lawyer",
+            "Without any injuries",
+          ],
+          a: 1,
+          r: "Competence and informed consent are legal requirements.",
+        },
+        {
+          q: "'Implied Consent' applies to:",
+          o: [
+            "All minors",
+            "Prisoners",
+            "Unresponsive or severely altered patients who cannot give consent",
+            "Anyone who calls 911",
+          ],
+          a: 2,
+          r: "The law implies they would want life-saving care if they were awake.",
+        },
+        {
+          q: "'Expressed Consent' is:",
+          o: [
+            "Written in a will",
+            "Assumed for children",
+            "When a conscious, competent patient verbally or non-verbally agrees to care",
+            "Given by a doctor",
+          ],
+          a: 2,
+          r: "The patient actively allows you to treat them.",
+        },
+        {
+          q: "An 'Emancipated Minor' is:",
+          o: [
+            "Any child under 18",
+            "A minor who is legally recognized as an adult (e.g., married, military)",
+            "A minor traveling alone",
+            "A minor in foster care",
+          ],
+          a: 1,
+          r: "They can legally give or refuse their own consent.",
+        },
+        {
+          q: "'Duty to Act' means:",
+          o: [
+            "You must stop at every accident",
+            "An on-duty EMS provider has a legal obligation to provide care",
+            "You must perform surgery if needed",
+            "You must act professionally off-duty",
+          ],
+          a: 1,
+          r: "The legal requirement to respond and treat while working.",
+        },
+        {
+          q: "'Abandonment' occurs when:",
+          o: [
+            "A patient refuses care",
+            "You leave a patient before transferring care to a provider of equal or higher level",
+            "You transport a patient against their will",
+            "You make a mistake",
+          ],
+          a: 1,
+          r: "You cannot leave a patient on the ER bed without giving a report to a nurse/doctor.",
+        },
+        {
+          q: "The four elements of 'Negligence' are:",
+          o: [
+            "Duty, Breach, Damages, Causation",
+            "Duty, Action, Harm, Lawsuit",
+            "Consent, Breach, Harm, Intent",
+            "Malice, Breach, Damages, Intent",
+          ],
+          a: 0,
+          r: "All four must be proven in court for a malpractice claim.",
+        },
+        {
+          q: "HIPAA protects:",
+          o: [
+            "The hospital from lawsuits",
+            "EMS from liability",
+            "Patient Protected Health Information (PHI) and privacy",
+            "The right to refuse care",
+          ],
+          a: 2,
+          r: "Health Insurance Portability and Accountability Act.",
+        },
+        {
+          q: "'Offline' Medical Direction involves:",
+          o: [
+            "Calling the doctor on a radio",
+            "Following written standing orders and protocols",
+            "Using the internet",
+            "Waiting for a doctor to arrive",
+          ],
+          a: 1,
+          r: "Pre-approved actions you can take without asking permission.",
+        },
+        {
+          q: "'Online' Medical Direction involves:",
+          o: [
+            "Reading a protocol book",
+            "Direct, real-time communication with a physician (phone/radio)",
+            "Emailing the hospital",
+            "Using a smartphone app",
+          ],
+          a: 1,
+          r: "Asking for permission to give a drug or perform a procedure.",
+        },
+        {
+          q: "'Therapeutic Communication' relies on:",
+          o: [
+            "Intimidation",
+            "Medical jargon",
+            "Active listening, empathy, and calming techniques",
+            "Silence",
+          ],
+          a: 2,
+          r: "Building a rapport to effectively treat the patient.",
+        },
+        {
+          q: "In communication, 'Reflection' means:",
+          o: [
+            "Looking in a mirror",
+            "Repeating the patient's words back to them to confirm understanding",
+            "Thinking about the call later",
+            "Staring at the patient",
+          ],
+          a: 1,
+          r: "e.g., Pt: 'My chest hurts.' Medic: 'Your chest hurts?'",
+        },
+        {
+          q: "'Leading Questions' should be avoided because:",
+          o: [
+            "They are too long",
+            "They suggest the answer you want to hear, planting ideas in the patient's head",
+            "They anger the patient",
+            "They are illegal",
+          ],
+          a: 1,
+          r: "e.g., 'Your pain is crushing, right?' instead of 'Describe your pain.'",
+        },
+        {
+          q: "The 'Chief Complaint' vs the 'Primary Problem':",
+          o: [
+            "They are always the same",
+            "Complaint is what the patient says; Problem is the actual medical condition killing them",
+            "Complaint is for police; Problem is for EMS",
+            "There is no difference",
+          ],
+          a: 1,
+          r: "A patient may complain of a hurt toe, but the problem is they are in cardiac arrest.",
+        },
+        {
+          q: "When taking a history on an unconscious patient, rely on:",
+          o: [
+            "Guessing",
+            "Bystanders, family members, medical ID jewelry, and pill bottles",
+            "Waiting for them to wake up",
+            "The police",
+          ],
+          a: 1,
+          r: "You must act as a detective using the environment.",
+        },
+        {
+          q: "The standard 'Pain Scale' uses:",
+          o: [
+            "Faces only",
+            "A 1 to 10 numerical rating",
+            "Letters A to Z",
+            "Mild, Moderate, Severe",
+          ],
+          a: 1,
+          r: "Quantifies the severity for trending.",
+        },
+        {
+          q: "In OPQRST, 'P' stands for:",
+          o: [
+            "Pain",
+            "Provocation/Palliation (What makes it better or worse?)",
+            "Pulse",
+            "Past history",
+          ],
+          a: 1,
+          r: "Identifies triggers for the symptom.",
+        },
+        {
+          q: "In OPQRST, 'Q' stands for:",
+          o: [
+            "Quantity",
+            "Quality (Describe the feeling: sharp, dull, burning?)",
+            "Questions",
+            "Quickness",
+          ],
+          a: 1,
+          r: "Helps differentiate between conditions (e.g., tearing vs crushing).",
+        },
+        {
+          q: "In OPQRST, 'R' stands for:",
+          o: [
+            "Rate",
+            "Radiation (Does the pain move anywhere?)",
+            "Respirations",
+            "Reaction",
+          ],
+          a: 1,
+          r: "e.g., Cardiac pain radiating to the left arm.",
+        },
+        {
+          q: "In SAMPLE, 'A' stands for:",
+          o: ["Age", "Airway", "Allergies", "Assessment"],
+          a: 2,
+          r: "Checks for anaphylaxis risks, especially to meds.",
+        },
+        {
+          q: "In SAMPLE, 'M' stands for:",
+          o: [
+            "Motor",
+            "Medications (Currently prescribed or taking)",
+            "Movement",
+            "Memory",
+          ],
+          a: 1,
+          r: "Provides clues to underlying chronic conditions.",
+        },
+        {
+          q: "In SAMPLE, 'P' stands for:",
+          o: ["Pain", "Pulse", "Past pertinent medical history", "Pupils"],
+          a: 2,
+          r: "Has this happened before? Do they have a heart condition?",
+        },
+        {
+          q: "In SAMPLE, 'E' stands for:",
+          o: [
+            "Emergency",
+            "Events leading up to the incident",
+            "Eyes",
+            "Evaluation",
+          ],
+          a: 1,
+          r: "What was the patient doing when the symptom started?",
+        },
+        {
+          q: "To 'Trend' vitals, you need:",
+          o: [
+            "A heart monitor",
+            "At least two sets of measurements taken over time",
+            "A doctor's order",
+            "An unstable patient",
+          ],
+          a: 1,
+          r: "You compare the baseline to subsequent readings.",
+        },
+        {
+          q: "'Bias' in assessment occurs when:",
+          o: [
+            "You take too long",
+            "You make assumptions based on a patient's appearance or environment (e.g., assuming intoxication instead of stroke)",
+            "You follow protocols",
+            "You call medical control",
+          ],
+          a: 1,
+          r: "Tunnel vision can lead to fatal misdiagnoses.",
+        },
+        {
+          q: "Scene Safety should be assessed:",
+          o: [
+            "Only upon arrival",
+            "Only if police are absent",
+            "Continuously throughout the entire call",
+            "During the secondary assessment",
+          ],
+          a: 2,
+          r: "Scenes are dynamic and can turn dangerous at any moment.",
+        },
+
+        // MODULE 5: Secondary Assessment (161-200)
+        {
+          q: "'Battle’s Sign' (bruising behind the ears over the mastoid process) is a late sign of:",
+          o: [
+            "Ear infection",
+            "Basilar skull fracture",
+            "Jaw fracture",
+            "Concussion",
+          ],
+          a: 1,
+          r: "Blood pools behind the ear due to a fracture at the base of the skull.",
+        },
+        {
+          q: "'Raccoon Eyes' (periorbital ecchymosis) is a late sign of:",
+          o: [
+            "Lack of sleep",
+            "Facial bruising",
+            "Basilar skull fracture",
+            "Allergies",
+          ],
+          a: 2,
+          r: "Blood pools around the eyes from a skull base fracture.",
+        },
+        {
+          q: "JVD (Jugular Vein Distention) is clinically significant when assessed with the patient:",
+          o: [
+            "Lying flat",
+            "Standing up",
+            "Sitting at a 45-degree angle",
+            "Prone",
+          ],
+          a: 2,
+          r: "Veins may look full when flat; distention at an angle indicates fluid backup (Heart Failure/Tamponade).",
+        },
+        {
+          q: "'Tracheal Deviation' (windpipe pushed to one side) is a critical, late sign of:",
+          o: [
+            "Asthma",
+            "Tension Pneumothorax",
+            "Cardiac arrest",
+            "Strep throat",
+          ],
+          a: 1,
+          r: "Extreme pressure in the pleural space pushes the mediastinum over.",
+        },
+        {
+          q: "'Subcutaneous Emphysema' is:",
+          o: [
+            "A rash",
+            "Fluid in the lungs",
+            "Air trapped under the skin, feeling like crackling/rice krispies",
+            "A broken rib",
+          ],
+          a: 2,
+          r: "Indicates a tear in the respiratory tract leaking air into soft tissue.",
+        },
+        {
+          q: "'Crepitus' is defined as:",
+          o: [
+            "A fast heartbeat",
+            "The grating sound or feeling of broken bone ends rubbing together",
+            "A high fever",
+            "Blue skin",
+          ],
+          a: 1,
+          r: "A definitive sign of a bone fracture.",
+        },
+        {
+          q: "'Abdominal Rigidity' (board-like tension) is an involuntary reflex indicating:",
+          o: [
+            "Good muscle tone",
+            "A full bladder",
+            "Severe peritoneal irritation or internal bleeding",
+            "Indigestion",
+          ],
+          a: 2,
+          r: "The body tenses muscles to protect inflamed/bleeding internal organs.",
+        },
+        {
+          q: "'Rebound Tenderness' is:",
+          o: [
+            "Pain that is constant",
+            "Pain that occurs when palpation pressure is quickly released",
+            "Pain when coughing",
+            "Pain on deep palpation only",
+          ],
+          a: 1,
+          r: "A classic sign of Peritonitis or Appendicitis.",
+        },
+        {
+          q: "If you feel a 'Pulsating Mass' in the abdomen, you should:",
+          o: [
+            "Massage it",
+            "Push harder to feel the size",
+            "Stop palpating immediately; suspect an Abdominal Aortic Aneurysm (AAA)",
+            "Apply ice",
+          ],
+          a: 2,
+          r: "Deep palpation can cause the aneurysm to rupture fatally.",
+        },
+        {
+          q: "'Priapism' in a male trauma patient is a reliable indicator of:",
+          o: [
+            "Pelvic fracture",
+            "Spinal cord injury",
+            "Dehydration",
+            "Internal bleeding",
+          ],
+          a: 1,
+          r: "Loss of sympathetic nervous system control over the vasculature.",
+        },
+        {
+          q: "'Decorticate' posturing (arms flexed tightly to the core) indicates:",
+          o: [
+            "Minor concussion",
+            "Severe brain injury",
+            "Spinal shock",
+            "Normal response to cold",
+          ],
+          a: 1,
+          r: "Indicates damage to the cerebral hemispheres.",
+        },
+        {
+          q: "'Decerebrate' posturing (arms extended and rotated outward) indicates:",
+          o: [
+            "Brainstem injury (worse prognosis than decorticate)",
+            "A seizure",
+            "A broken neck",
+            "Recovery",
+          ],
+          a: 0,
+          r: "Indicates deep brainstem damage and impending herniation.",
+        },
+        {
+          q: "The 'Babinski Reflex' is positive (abnormal) in an adult when:",
+          o: [
+            "The toes curl downward",
+            "The big toe flexes upward and toes fan out when the sole is stroked",
+            "The foot jerks",
+            "There is no reaction",
+          ],
+          a: 1,
+          r: "Normal in infants, but indicates CNS damage in adults.",
+        },
+        {
+          q: "A 'CMS' check evaluates:",
+          o: [
+            "Circulation, Motor, and Sensory function in extremities",
+            "Chest, Mouth, Stomach",
+            "Cervical, Muscular, Skeletal",
+            "Cardiac, Mental, Systems",
+          ],
+          a: 0,
+          r: "Checks for nerve and vascular damage past an injury site.",
+        },
+        {
+          q: "'Pitting Edema' (swelling that leaves an indent when pressed) is a hallmark of:",
+          o: [
+            "Right-sided heart failure",
+            "Liver failure",
+            "Kidney stones",
+            "Asthma",
+          ],
+          a: 0,
+          r: "Fluid backs up from the failing right ventricle into the body (legs/sacrum).",
+        },
+        {
+          q: "'Hematemesis' is defined as:",
+          o: [
+            "Coughing up blood",
+            "Vomiting blood (bright red or 'coffee grounds')",
+            "Blood in the urine",
+            "Nosebleed",
+          ],
+          a: 1,
+          r: "Indicates an upper GI bleed.",
+        },
+        {
+          q: "'Hemoptysis' is defined as:",
+          o: [
+            "Vomiting blood",
+            "Blood in the stool",
+            "Coughing up blood (often bright red and frothy)",
+            "Bleeding from the ear",
+          ],
+          a: 2,
+          r: "Indicates bleeding in the respiratory tract.",
+        },
+        {
+          q: "'Melena' is defined as:",
+          o: [
+            "Fresh red blood in the stool",
+            "Dark, tarry stool",
+            "Blood in the urine",
+            "Vomiting blood",
+          ],
+          a: 1,
+          r: "Indicates digested blood from an upper GI bleed.",
+        },
+        {
+          q: "'Hematuria' is defined as:",
+          o: [
+            "Blood in the urine",
+            "Blood in the stool",
+            "Blood in the eye",
+            "Bruising",
+          ],
+          a: 0,
+          r: "Indicates trauma/issues with the kidneys or bladder.",
+        },
+        {
+          q: "'Ecchymosis' is the medical term for:",
+          o: [
+            "A scrape",
+            "A cut",
+            "Bruising (discoloration from broken vessels)",
+            "Swelling",
+          ],
+          a: 2,
+          r: "Standard medical terminology for a bruise.",
+        },
+        {
+          q: "An 'Abrasion' is:",
+          o: [
+            "A deep cut",
+            "A superficial scrape (friction burn/road rash)",
+            "A tear",
+            "A puncture",
+          ],
+          a: 1,
+          r: "Damage to the epidermis only.",
+        },
+        {
+          q: "A 'Laceration' is:",
+          o: [
+            "A scrape",
+            "A bruise",
+            "A cut with smooth or jagged edges",
+            "A torn flap",
+          ],
+          a: 2,
+          r: "A tear or cut in the skin/soft tissue.",
+        },
+        {
+          q: "An 'Avulsion' is:",
+          o: [
+            "A puncture wound",
+            "A torn flap of skin or tissue (either hanging or completely detached)",
+            "A minor scrape",
+            "A burn",
+          ],
+          a: 1,
+          r: "Significant soft tissue trauma requiring bulky dressing.",
+        },
+        {
+          q: "An 'Evisceration' is:",
+          o: [
+            "A severed limb",
+            "Internal organs protruding through a wound",
+            "A crushed bone",
+            "A deep bruise",
+          ],
+          a: 1,
+          r: "Requires a sterile, moist dressing to keep organs viable.",
+        },
+        {
+          q: "An 'Amputation' is:",
+          o: [
+            "A torn flap",
+            "The complete severing of a body part",
+            "A puncture",
+            "A crush injury",
+          ],
+          a: 1,
+          r: "Wrap part in dry sterile gauze, put in bag, keep cool (not on ice).",
+        },
+        {
+          q: "The protocol for an 'Impaled Object' is to:",
+          o: [
+            "Remove it quickly",
+            "Cut it flush with the skin",
+            "Stabilize it in place with bulky dressings; do NOT remove it",
+            "Push it all the way through",
+          ],
+          a: 2,
+          r: "The object may be tamponading a severed artery.",
+        },
+        {
+          q: "The ONLY exception to the rule of not removing an impaled object is:",
+          o: [
+            "If it is in the eye",
+            "If it is in the leg",
+            "If it is through the cheek and obstructing the airway",
+            "If the patient asks you to",
+          ],
+          a: 2,
+          r: "Airway patency overrides the risk of bleeding.",
+        },
+        {
+          q: "The 'Halo Test' is used to check for:",
+          o: [
+            "Concussions",
+            "Cerebrospinal Fluid (CSF) mixing with blood from the ears or nose",
+            "Vision loss",
+            "Spinal fractures",
+          ],
+          a: 1,
+          r: "A yellowish ring forms around the blood drop on gauze, indicating a skull fracture.",
+        },
+        {
+          q: "'Tinnitus' is the medical term for:",
+          o: ["Dizziness", "Ringing in the ears", "Blurred vision", "Numbness"],
+          a: 1,
+          r: "Often follows loud blasts or head trauma.",
+        },
+        {
+          q: "'Vertigo' is the medical term for:",
+          o: [
+            "Fear of heights",
+            "A severe headache",
+            "A sensation of spinning or extreme dizziness",
+            "Fainting",
+          ],
+          a: 2,
+          r: "Relates to inner ear or neurological issues.",
+        },
+        {
+          q: "'Guarding' of the abdomen is:",
+          o: [
+            "A rigid, board-like stomach",
+            "Voluntary or involuntary tensing of the muscles by the patient to protect against pain",
+            "Holding a pillow",
+            "Normal posture",
+          ],
+          a: 1,
+          r: "A behavioral or reflex response to pain.",
+        },
+        {
+          q: "'Referred Pain' is:",
+          o: [
+            "Pain that goes away",
+            "Pain that is faked",
+            "Pain felt in an area away from the actual source of the problem",
+            "Pain that moves around constantly",
+          ],
+          a: 2,
+          r: "e.g., Gallbladder pain felt in the right shoulder.",
+        },
+        {
+          q: "'Somatic Pain' originates from:",
+          o: [
+            "Internal organs",
+            "Skin, muscles, and joints (usually sharp and easily localized)",
+            "The brain",
+            "Blood vessels",
+          ],
+          a: 1,
+          r: "You can usually point a single finger to somatic pain.",
+        },
+        {
+          q: "'Visceral Pain' originates from:",
+          o: [
+            "Skin",
+            "Bones",
+            "Internal organs (usually dull, achy, and hard to localize)",
+            "Nerves",
+          ],
+          a: 2,
+          r: "Organ pain is poorly mapped by the brain.",
+        },
+        {
+          q: "'Cullen’s Sign' (bruising around the umbilicus) indicates:",
+          o: [
+            "A hernia",
+            "Intra-abdominal bleeding",
+            "Pregnancy",
+            "A minor bruise",
+          ],
+          a: 1,
+          r: "A late sign of severe internal hemorrhage.",
+        },
+        {
+          q: "'Grey Turner’s Sign' (bruising on the flanks) indicates:",
+          o: [
+            "Kidney failure",
+            "Retroperitoneal bleeding",
+            "Spinal fracture",
+            "Liver failure",
+          ],
+          a: 1,
+          r: "Bleeding in the cavity behind the peritoneum.",
+        },
+        {
+          q: "'Kehr’s Sign' (referred pain in the left shoulder) is a classic indicator of:",
+          o: [
+            "A heart attack",
+            "A ruptured spleen",
+            "Gallstones",
+            "Appendicitis",
+          ],
+          a: 1,
+          r: "Blood in the abdomen irritates the diaphragm, referring pain to the shoulder.",
+        },
+        {
+          q: "'Beck’s Triad' (JVD, Muffled heart sounds, Narrow pulse pressure) indicates:",
+          o: [
+            "Tension Pneumothorax",
+            "Myocardial Infarction",
+            "Cardiac Tamponade",
+            "Asthma",
+          ],
+          a: 2,
+          r: "Fluid fills the pericardial sac, preventing the heart from filling.",
+        },
+        {
+          q: "'Cushing’s Triad' (High BP, Bradycardia, Irregular respirations) indicates:",
+          o: [
+            "Cardiac Tamponade",
+            "Increased Intracranial Pressure (ICP) / Brain herniation",
+            "Shock",
+            "Hypothermia",
+          ],
+          a: 1,
+          r: "The body's desperate attempt to perfuse a swollen brain.",
+        },
+        {
+          q: "When palpating the pelvis for stability, you should:",
+          o: [
+            "Press down and in gently ONLY ONCE; stop immediately if it hurts or moves",
+            "Rock it back and forth",
+            "Press hard multiple times",
+            "Never touch it",
+          ],
+          a: 0,
+          r: "Further manipulation can cause catastrophic bleeding from broken pelvic vessels.",
+        },
+      ];
+
+      // QUIZ LOGIC
+      let currentQuiz = [];
+      let currentQuestionIndex = 0;
+      let score = 0;
+
+      function startQuiz() {
+        // Shuffle the 200 question bank and pick the first 50
+        const shuffled = [...questionBank].sort(() => 0.5 - Math.random());
+        currentQuiz = shuffled.slice(0, 50);
+        currentQuestionIndex = 0;
+        score = 0;
+
+        document.getElementById("start-screen").classList.add("hidden");
+        document.getElementById("end-screen").classList.add("hidden");
+        document.getElementById("quiz-screen").classList.remove("hidden");
+
+        loadQuestion();
+      }
+
+      function loadQuestion() {
+        // Reset UI
+        document.getElementById("feedback-container").classList.add("hidden");
+        document.getElementById("next-btn").classList.add("hidden");
+        document.getElementById("progress-text").innerText = `Question ${
+          currentQuestionIndex + 1
+        } of 50`;
+        document.getElementById("score-text").innerText = `Score: ${score}`;
+
+        const qData = currentQuiz[currentQuestionIndex];
+        document.getElementById("question-text").innerText = qData.q;
+
+        const optionsContainer = document.getElementById("options-container");
+        optionsContainer.innerHTML = "";
+
+        qData.o.forEach((optText, index) => {
+          const btn = document.createElement("button");
+          btn.className =
+            "option-btn w-full text-left bg-slate-50 border-2 border-slate-200 text-slate-700 font-medium py-4 px-6 rounded-lg";
+          btn.innerText = optText;
+          btn.onclick = () => selectAnswer(index, btn);
+          optionsContainer.appendChild(btn);
+        });
+      }
+
+      function selectAnswer(selectedIndex, btnElement) {
+        const qData = currentQuiz[currentQuestionIndex];
+        const isCorrect = selectedIndex === qData.a;
+
+        // Disable all buttons
+        const buttons = document.querySelectorAll(".option-btn");
+        buttons.forEach((btn, idx) => {
+          btn.disabled = true;
+          btn.classList.add("disabled");
+          // Highlight correct answer
+          if (idx === qData.a) {
+            btn.classList.add("correct");
+          }
+        });
+
+        // Highlight selected wrong answer
+        if (!isCorrect) {
+          btnElement.classList.add("wrong");
+        } else {
+          score++;
+          document.getElementById("score-text").innerText = `Score: ${score}`;
+        }
+
+        // Show Rationale
+        const feedbackContainer = document.getElementById("feedback-container");
+        const feedbackTitle = document.getElementById("feedback-title");
+        const feedbackRationale = document.getElementById("feedback-rationale");
+
+        feedbackContainer.classList.remove("hidden");
+        feedbackContainer.classList.remove(
+          "bg-green-50",
+          "border-green-500",
+          "text-green-800",
+          "bg-red-50",
+          "border-red-500",
+          "text-red-800"
+        );
+
+        if (isCorrect) {
+          feedbackContainer.classList.add(
+            "bg-green-50",
+            "border-green-500",
+            "text-green-800"
+          );
+          feedbackTitle.innerText = "Correct!";
+        } else {
+          feedbackContainer.classList.add(
+            "bg-red-50",
+            "border-red-500",
+            "text-red-800"
+          );
+          feedbackTitle.innerText = "Incorrect";
+        }
+
+        feedbackRationale.innerText = qData.r;
+
+        // Show Next Button
+        const nextBtn = document.getElementById("next-btn");
+        nextBtn.classList.remove("hidden");
+        if (currentQuestionIndex === 49) {
+          nextBtn.innerText = "Finish Exam";
+        } else {
+          nextBtn.innerText = "Next Question \u2192";
+        }
+      }
+
+      function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < 50) {
+          loadQuestion();
+        } else {
+          showResults();
+        }
+      }
+
+      function showResults() {
+        document.getElementById("quiz-screen").classList.add("hidden");
+        document.getElementById("end-screen").classList.remove("hidden");
+
+        const percentage = ((score / 50) * 100).toFixed(0);
+        let colorClass = "text-red-600";
+        if (percentage >= 80) colorClass = "text-green-600";
+        else if (percentage >= 70) colorClass = "text-yellow-600";
+
+        document.getElementById(
+          "final-score"
+        ).className = `text-5xl font-extrabold mb-8 ${colorClass}`;
+        document.getElementById(
+          "final-score"
+        ).innerText = `${score} / 50 (${percentage}%)`;
+      }
+    </script>
+  </body>
+</html>
