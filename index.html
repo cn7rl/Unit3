@@ -54,34 +54,36 @@
         }
         .btn-next:hover { background: var(--primary-hover); }
 
-}
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="header">
-        <h1>NREMT Prep: UNIT 3</h1>
-        <span id="q-count" style="color: var(--text-dim); font-weight: 600;">Question 1/200</span>
-    </div>
+<body>
+<div id="quiz-content">
+  <div class="app-container">
+      <div class="header">
+          <h1>NREMT Prep: UNIT 3</h1>
+          <span id="q-count" style="color: var(--text-dim); font-weight: 600;">Question 1/200</span>
+      </div>
 
-    <div class="stats-grid">
-        <div class="stat-card"><span class="stat-val" id="stat-score">0</span><span class="stat-label">Correct</span></div>
-        <div class="stat-card"><span class="stat-val" id="stat-accuracy">0%</span><span class="stat-label">Accuracy</span></div>
-        <div class="stat-card"><span class="stat-val" id="stat-streak">0</span><span class="stat-label">Streak</span></div>
-    </div>
+      <div class="stats-grid">
+          <div class="stat-card"><span class="stat-val" id="stat-score">0</span><span class="stat-label">Correct</span></div>
+          <div class="stat-card"><span class="stat-val" id="stat-accuracy">0%</span><span class="stat-label">Accuracy</span></div>
+          <div class="stat-card"><span class="stat-val" id="stat-streak">0</span><span class="stat-label">Streak</span></div>
+      </div>
 
-    <div class="progress-container"><div id="progress-bar"></div></div>
+      <div class="progress-container"><div id="progress-bar"></div></div>
 
-    <div class="quiz-card">
-        <div id="category" class="category-pill">LOADING</div>
-        <div id="scenario" class="scenario-box" style="display:none;"></div>
-        <div id="question" class="question">Preparing 200 clinical questions...</div>
-        <div id="options" class="options"></div>
-        <div id="feedback" class="feedback"></div>
-        <button id="btn-next" class="btn-next" onclick="handleNext()">Next Question &rarr;</button>
-    </div>
-</div>
+      <div class="quiz-card">
+          <div id="category" class="category-pill">LOADING</div>
+          <div id="scenario" class="scenario-box" style="display:none;"></div>
+          <div id="question" class="question">Preparing 200 clinical questions...</div>
+          <div id="options" class="options"></div>
+          <div id="feedback" class="feedback"></div>
+          <button id="btn-next" class="btn-next" onclick="handleNext()">Next Question &rarr;</button>
+      </div>
+  </div>
+</div> <!-- end of #quiz-content -->
 
 <script>
     // 0: Scene Size-Up, 1: Primary Assessment, 2: Vital Signs, 3: Secondary Assessment, 4: Reassessment, 5: Comm/Doc
@@ -344,8 +346,6 @@
     }
 
     window.onload = init;
-
-});
 </script>
 
 </body>
