@@ -4085,4 +4085,76 @@
       let html = `<div class="mb-6 flex flex-wrap gap-2">
         <button onclick="initQuiz('all')" class="px-4 py-2 rounded-xl font-medium transition-all ${
           currentMode === "all" ? "bg-blue-600 text-white" : "bg-white border border-gray-300 hover:bg-gray-50"
-        }">All Chapters (265)</button
+        }">All Chapters (265)</button>`;
+
+      Object.keys(chapterGroups).sort().forEach(chapter => {
+        const count = chapterGroups[chapter].length;
+        html += `<button onclick="initQuiz('${chapter}', '${chapter}')" class="px-4 py-2 rounded-xl font-medium transition-all ${
+          currentChapterKey === chapter ? "bg-blue-600 text-white" : "bg-white border border-gray-300 hover:bg-gray-50"
+        }">${chapter} (${count})</button>`;
+      });
+
+      html += `</div>`;
+      container.innerHTML = html;
+    }
+
+    function renderReviewPanel() {
+      const container = document.getElementById("review-list");
+      container.innerHTML = "";
+      const questions = getCurrentQuestions();
+
+      currentShuffledIndices.forEach((shuffledPos, displayIndex) => {
+        const q = questions[shuffledPos];
+        const answered = userAnswers[shuffledPos] !== null;
+        const isCorrect = answered && userAnswers[shuffledPos] === q.correct;
+
+        const btn = document.createElement("button");
+        btn.textContent = displayIndex + 1;
+        btn.className = `w-9 h-9 rounded-lg text-sm font-medium border flex items-center justify-center transition-all ${
+          answered ? (isCorrect ? "correct" : "wrong") : "bg-gray-100 hover:bg-gray-200"
+        }`;
+        btn.onclick = () => {
+          currentQuestion = displayIndex;
+          loadQuestion();
+        };
+        container.appendChild(btn);
+      });
+
+      const answeredCount = userAnswers.filter(a => a !== null).length;
+      document.getElementById("review-count").textContent = `${answeredCount} / ${questions.length}`;
+    }
+
+    function nextQuestion() {
+      if (currentQuestion < currentShuffledIndices.length - 1) {
+        currentQuestion++;
+        loadQuestion();
+      } else {
+        alert(`🎉 Quiz Complete! (${currentMode === "all" ? "All Chapters" : currentChapterKey})`);
+      }
+    }
+
+    function prevQuestion() {
+      if (currentQuestion > 0) {
+        currentQuestion--;
+        loadQuestion();
+      }
+    }
+
+    function shuffleArray(array) {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") nextQuestion();
+      if (e.key === "ArrowLeft") prevQuestion();
+    });
+
+    window.onload = () => {
+      initQuiz("all");
+    };
+  </script>
+</body>
+</html>
